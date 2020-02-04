@@ -1,5 +1,6 @@
 # An Introduction to Helm, the Package Manager for Kubernetes
 https://www.digitalocean.com/community/tutorials/an-introduction-to-helm-the-package-manager-for-kubernetes
+Using Helm: https://www.digitalocean.com/community/tutorials/how-to-install-software-on-kubernetes-clusters-with-the-helm-package-manager
 ___
 
 ## Introduction
