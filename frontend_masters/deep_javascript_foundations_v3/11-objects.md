@@ -171,6 +171,9 @@ prior to es6 there was no way to handle relative polymorphism.
 methods in a class that get passed into a setTimeout will lose its this binding 
 
 assigning functions to the `this` object in a class creates a new function for every instance. It's NOT on the prototype and shared across all instances; every instance has its own copy of the function. This is inefficient.
+If you end up doing this, don't use the class structure, just use the module pattern.
+Class system can work for polymorphism and inheritance
+
 
 
 
