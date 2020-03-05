@@ -22,6 +22,11 @@ msg.match(/(?<=e)(l.)/g);
 msg.match(/(?<!e)(l.)/g);
 // ['lo','ld']
 
-
 ```
+
+2. Named Capture Groups
+
+3. dotall mode
+
+Can now turn on unicode-awareness for regular expressions
 

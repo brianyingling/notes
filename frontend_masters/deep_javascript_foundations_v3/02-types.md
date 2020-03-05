@@ -140,6 +140,8 @@ Don't use `new`:
 
 Don't use the above as constructors, just functions
 
+use Date with `new` because there is no Date literal
+
 
 
 

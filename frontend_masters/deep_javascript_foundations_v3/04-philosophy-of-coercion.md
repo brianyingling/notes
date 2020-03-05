@@ -23,3 +23,10 @@ Implicit != Bad
 Implicit: Abstracted
 
 "We want to hide unnecessary details, refocusing the reader and increasing clarity." - Kyle Simpson
+
+Implicit can be good (sometimes)
+
+## Understanding Features
+"If a feature is sometimes useful and sometimes dangerous and if there is a better option then always use the better option." - Douglas Crockford, "JavaScript: The Good Parts"
+
+
