@@ -125,6 +125,20 @@ ALB Routes to different apps
 
 ## Application Load Balancer (v2) Target Groups
 * EC2 instances can be managed by an Auto Scaling Group - HTTP
+* ECS tasks (managed by ECS itself) - HTTP
+* Lambda functions - HTTP request is translated into a JSON event (ALBs can be in front of lambda functions)
+* IP addresses - must be private IPs
+* ALB can route to multiple target groups
+* Health checks are at the target group level
+
+## Application Load Balancer (v2) - Good To Know
+* Get a fixed hostname - xxx.region.elb.amazonaws.com
+* The application servers don't see the IP of the client directly
+    * The true IP of the client is inserted in the header `X-Forwarded-For`
+    * We can also get Port (`X-Forwarded-Port`) and protocol (`X-Forwarded-Proto`)
+* Client IP (12.34.56.78) -> Load Balancer IP (Private IP) -> EC2 instance
+* For the instance to to know the Client IP it will have to look at these extra headers listed above
+
 
 
 
