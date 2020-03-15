@@ -139,6 +139,18 @@ ALB Routes to different apps
 * Client IP (12.34.56.78) -> Load Balancer IP (Private IP) -> EC2 instance
 * For the instance to to know the Client IP it will have to look at these extra headers listed above
 
+## Network Load Balancer (v2)
+* Network load balancers (Layer 4) allow you to:
+    * Forward TCP and UDP traffic to your instances
+    * Handle millions of requests per second
+    * Less latency ~100ms (vs 400ms) for ALB
+* NLB has *one static IP per availability zone* and supports assigning Elastic IP (helpful for whitelisting specific IP) (CLB and ALB have static hostname)
+* NLBs are used for extreme performance, TCP or UDP traffic
+* *NOT* included in AWS free tier
 
+## Network Load Balancer (v2) -- TCP (Layer 4) Based Traffic
+Initial setup with instances assigned to nlb target group are unhealthy because they do not allow traffic to come in from anywhere
+* Use this if you want to have a static IP or:
+* high performance
 
 
