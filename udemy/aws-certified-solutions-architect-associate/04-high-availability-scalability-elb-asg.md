@@ -2,13 +2,12 @@
 
 ## Section 4 - High Availability and Scalability - ELB and ASG
 
-
 ## Scalability and High Availability
 * Scalability means that an application / system can handle greater loads by adapting.
 * 2 Kinds of scalability:
     * Vertical scalability 
     * Horizontal scalability = elasticity
-* Scalability is linked but different to high availability
+* Scalability is linked to but different than high availability
 
 ## Vertical Scalability
 * def. - increases the size of the instance
@@ -117,6 +116,8 @@
     (Docker and Amazon ECS)
 * Has a port mapping feature to redirect to a dynamic port in ECS
 * In comparison, we'd need multiple Classic Load Balancer per application
+* ALB exposes a DNS URL, whereas ALB / CLB exposes a static IP address 
+
 
 ## Application Load Balancer (v2) HTTP-based traffic
 ALB Routes to different apps 
@@ -147,6 +148,7 @@ ALB Routes to different apps
 * NLB has *one static IP per availability zone* and supports assigning Elastic IP (helpful for whitelisting specific IP) (CLB and ALB have static hostname)
 * NLBs are used for extreme performance, TCP or UDP traffic
 * *NOT* included in AWS free tier
+* NLB exposes a STATIC IP address, whereas ALB / CLB exposes a static DNS URL 
 
 ## Network Load Balancer (v2) -- TCP (Layer 4) Based Traffic
 Initial setup with instances assigned to nlb target group are unhealthy because they do not allow traffic to come in from anywhere
@@ -168,7 +170,7 @@ Initial setup with instances assigned to nlb target group are unhealthy because 
     * disabled by default
     * No charge for inter-availability-zone data if enabled (if data goes from one AZ to another, you will be charged for it, but not with CLB)
 * Application Load Balancer
-    * Always on (cant be disabled)
+    * Always on (can't be disabled)
     * No charges for inter AZ data
 * Network Load Balancer
     * Disabled by default
@@ -295,4 +297,9 @@ Users ---> (https encrypted over www) ---> Load Balancer -->  (http over private
     * By default as soon as an instance is launched its in service
     * You have the ability to perform extra steps before the instance goes in service (pending state).
     * You have the ability to perform some actions before the instance is Terminated (terminating state).
+
+
+Things to study:
+1. ALB is given a static DNS name, whereas NLB is given a static IP address
+2. Scaling policies (Simple Scaling, Step Scaling, Target Tracking, Scheduled Scaling)
 
