@@ -267,4 +267,32 @@ Users ---> (https encrypted over www) ---> Load Balancer -->  (http over private
 * Having instances under an ASG means that if they get terminated for whatever reason, the ASG will restart them. Extra safety!
 * ASG can terminate instances marked as unhealthy by a load balancer (and hence replace them)
 
+## Auto Scaling Groups - Scaling Policies
+* Target Tracking Scaling
+    * Most simple and easy to set up
+    * Example: I want the average ASG CPU to stay around 40%, over this and more instances will be provisioned
+* Simple / Step Scaling
+    * When a CloudWatch alarm is triggered (example CPU > 70%) then add 2 units
+    * When a CloudWatch alarm is triggered (example CPU < 30%) then remove 1 unit
+* Scheduled Actions
+    * Anticipate scaling based on known usage patterns
+    * Example: increase the min capacity to 10 at 5pm on Fridays
+
+## Auto Scaling Groups - Scaling Cooldowns
+* The cooldown period helps to ensure that your Auto Scaling Group doesn't launch or terminate additional instances before the previous scaling activity takes effect
+* In addition to the default cooldown for Auto Scaling Groups, we can create cooldowns that apply to a specific simple scaling policy
+* A scaling-specific cooldown period overrides the default cooldown period.
+* One common use for scaling specific cooldowns is with a scale-in policy -- a policy that terminates instances based on a specific criteria or metric. Because this policy terminates instances, Amazon EC2 Auto Scaling needs less time to determine whether to terminate additional instances.
+* If the default cooldown period of 300 seconds is too long, you can reduce costs by applying a scaling-specific cooldown period of 180 seconds to the scale-in policy.
+* If your application is scaling up or down multiple times each hour, modify the Auto Scaling Groups cooldown timers and the CloudWatch alarm period that triggers the scale in.
+
+## Auto Scaling Groups - For Solutions Architects
+* ASG Default Termination Policy (simplified version):
+    * Find the AZ with the most number of instances
+    * If there are multiple instances in the AZ to choose from, delete the one with the oldest launch configuration
+    * ASG tries to balance the number of instances across Availability Zone by default
+* Lifecycle Hooks
+    * By default as soon as an instance is launched its in service
+    * You have the ability to perform extra steps before the instance goes in service (pending state).
+    * You have the ability to perform some actions before the instance is Terminated (terminating state).
 
