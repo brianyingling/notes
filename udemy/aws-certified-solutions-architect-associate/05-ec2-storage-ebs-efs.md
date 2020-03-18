@@ -12,7 +12,7 @@
 ## EBS Volume
 * It's a network drive (i.e. not a physical drive)
     * It uses the network to communicate the instance, which means there might be some latency
-    * Can be detached from an EC2 instance and attached to another one quickly (as long as their in the same AZ)
+    * Can be detached from an EC2 instance and attached to another one quickly (as long as they're in the same AZ)
 * It's locked to an Availability Zone (AZ)
     * An EBS Volume in `us-east-1a` cannot be attached to `us-east-1b`
     * To move a volume across, you first need to snapshot
@@ -231,3 +231,24 @@ ec2 (us-east-1a)        ec2 (us-east-1b)    ec2 (us-east-1c)
 * EFS file sync to sync from on-premise file system to EFS
 * Backup EFS to EFS (incremental - can choose frequency)
 * Encrypted when at rest using KMS
+
+## EFS Hands On
+* configuring EFS on 2 ec2 instances using SSH
+* Follow the directions when looking at your EFS instance in the AWS console:
+    * install efs utils: `sudo yum install -y amazon-efs-utils`
+    * create an efs folder: `sudo mkdir /efs`
+    * mount your efs drive to the the efs folder: `sudo mount -t efs fs-37b4484f:/ /efs`, where `fs-xxxx` you get from the AWS console
+
+## EBS and EFS for Solutions Architect
+* EBS volumes can be attached to only one instance at a time (like a usb stick)
+* EBS volumes are locked at the availability zone level (can migrate using snapshots and backups, but functionally only at AZ level)
+* Migrating an EBS volume across AZ means first backing it up (snapshot), then recreating it on the other AZ
+* EBS backups use IO and you shouldn't run them while your application is handling a lot of traffic
+* Root EBS volumes of instances get terminated by default if the EC2 instance gets terminated
+* Disk IO is high -> increase EBS volume size (for gp2)
+* EFS allows for mounting 100s of instances
+* EFS share website files (like wordpress)
+* EBS gp2, optimize on cost (for local-type of storage on the instance)
+* Can use a custom AMI for faster deployment on Auto Scaling Groups.
+* EFS vs EBS vs Instance Store
+* Solution architecture on EBS / EFS is discussed in a later section

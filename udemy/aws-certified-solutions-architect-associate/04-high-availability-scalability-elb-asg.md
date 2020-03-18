@@ -302,4 +302,3 @@ Users ---> (https encrypted over www) ---> Load Balancer -->  (http over private
 Things to study:
 1. ALB is given a static DNS name, whereas NLB is given a static IP address
 2. Scaling policies (Simple Scaling, Step Scaling, Target Tracking, Scheduled Scaling)
-
