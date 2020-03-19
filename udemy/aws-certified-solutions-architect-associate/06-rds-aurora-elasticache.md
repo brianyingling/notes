@@ -109,7 +109,6 @@ M - RDS Master DB instance (AZ A)  ----> (sync replication) S - RDS instance Sta
     * Encryption has to be defined at launch time
     * *If the master is not encrypted, the read replicas also cannot be encrypted!* - exam question
     * Transparent Data Encryption (TDE) available for Oracle and SQL Server
-
 * In-flight Encryption
     * SSL certificates to encrypt data to RDS in-flight
     * Provide SSL options with trust certificate when connecting to database
@@ -159,5 +158,99 @@ MySQL db
     * No manual DB patching
     * No manual OS patching
     * No way to audit the underlying instance
-    
+
+## Amazon Aurora
+* Aurora is a proprietary technology from Amazon (not open source)
+* PostgreSQL and MySQL are both supported as Aurora DB (that means your drivers will work as if Aurora was a Postgres or MySQL db)
+* Aurora storage automatically grows in increments of 10GB, up to 64TB
+* Aurora can have up to 15 replicas while MySQL has 5, and the replication process is faster (sub 10ms replica lag)
+* Failover in Aurora is instantaneous, it's high-availability native.
+* Aurora costs more than RDS (20% more) - but its more efficient
+
+## Aurora High Availability and Read Scaling
+* Stores 6 copies of data across 3 Availability Zones
+    * 4 copies out of 6 needed for writes
+    * 3 copies out of 6 needed for reads
+    * Self-healing with peer-to-peer replication
+    * Storage is striped across 100s of volumes
+* One Aurora instance takes writes (master)
+* Automated failover for master in less than 30 seconds
+* Master + up to 15 Aurora Read Replicas serve reads
+* Support for Cross Region Replication
+
+## Aurora DB Cluster
+* Writer endpoint always points to the master db (because db can failover)
+* Can set up autoscaling for up to 15 read replicas
+* Reader endpoint - deals with connection load balancing for all of the read replicas
+
+                client 
+            /            \
+Writer Endpoint         Reader endpoint
+(pointing to master)    (connection load balancing)
+|                           /       |          \
+Master db               Read db     Read db     Read db (these auto scale)
+| (writes to)               |       |           |
+---------------- Shared storage volume (auto expanding from 10GB to 64TB) ----------------
+
+## Features of Aurora
+* Automatic failover
+* Backup and Recovery
+* Isolation and security
+* Industry compliance
+* Push-button scaling
+* Automated Patching with zero downtime
+* Advanced Monitoring
+* Routine Maintenance
+* Backtrack: restore data at any point of time without using backups
+
+## Aurora Security
+* Similar to RDS because it uses the same engines
+* Encryption at rest using KMS
+* Automated backups, snapshots, and replicas are also encrypted
+* Encryption in-flight using SSL (same process as MySQL or Postgres)
+* Possibility to authenticate using IAM token (same method as RDS)
+* You are responsible for protecting the instance with security groups
+* You can't SSH
+
+## Aurora Serverless
+* Automated database instantiation and autoscaling based on actual usage
+* Good for infrequent, intermittent, or unpredictable workloads
+* No capacity planning needed
+* Pay per second, can be more cost-effective
+
+Client
+|
+Proxy Fleet
+(managed by Aurora)
+/       /
+Amazon Amazon
+Aurora Aurora
+|       |
+Shared Storage Volume
+
+## Global Aurora
+* Aurora Cross Region Read Replicas
+    * Useful for disaster recovery
+    * Simple to put in place
+* Aurora Global Database (recommended):
+    * 1 primary region (where all the reads and writes happen)
+    * Up to 5 secondary (read-only) regions, replication lag is less than 1 second
+    * Up to 16 read replicas per secondary region
+    * Helps for decreasing latency
+    * Promoting another region (for disaster recovery) has an RTO (Recovery time objective) of < 1 min
+
+--- us-east-1 - PRIMARY REGION
+[] [] []        <---->  Amazon Aurora ----------|
+Applications                                    |
+Reads / Writes                                  |
+---                                             |
+                                                |
+                                                | replication (up to 1 sec lag)
+                                                |
+--- us-west-1 - SECONDARY REGION                |
+[] [] []        <---->  Amazon Aurora <---------|             
+Applications
+Read Only Workloads
+---
+
 
