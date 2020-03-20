@@ -253,4 +253,71 @@ Applications
 Read Only Workloads
 ---
 
+## AWS ElastiCache Overview
+* The same way to RDS is to get managed relational databases...
+* ElastiCache is to get managed Redis or Memcached
+* Caches are in-memory databases with really high performance, low latency
+* Helps reduce load off of databases for read intensive workloads
+* Helps make your app stateless
+* Write scaling using sharding
+* Read scaling using read replicas
+* Multi Availability Zone with Failover Capability
+* AWS takes care of OS maintenance/patching, optimizations, setup, configuration, monitoring failure recovery, 
+
+## ElastiCache Solution Architecture - DB Cache
+* Applications query ElastiCache; if not available, get from RDS and store in ElastiCache
+* Helps relieve load in RDS
+* Cache must have an invalidation strategy to make sure only the most current data is used there
+
+-- application --                   -- ElastiCache --       -- RDS --
+                    <- cache hit--> 
+                    - cache miss ->
+                    <-- Read from DB -------------------------->
+                    -- write to cache ->
+
+## ElastiCache Solution Architecture - User Session Store
+* User logs into any of the application instances
+* The application writes the session data into ElastiCache
+* The user hits another instance of our application
+* The instance retrieves the data and the user is already logged in
+
+## ElastiCache - Redis v Memcached
+-- Redis --
+Multi-AZ with auto-failover
+Read replicas to scale reads and have high-availability
+Data durability using AOF persistence
+Backup and restore features
+
+-- Memcached --
+Multi-node for partitioning of data (sharding)
+Non persistent (if node goes down, data is lost)
+No backup and restore
+multi-threaded architecture
+
+## ElastiCache - Cache Security
+* All caches in ElastiCache
+    * Support SSL in-flight encryption
+    * *DO NOT support IAM authentication*
+    * IAM policies on ElastiCache are only used for AWS API-level security (creating, editing, deleting clusters)
+* Redis AUTH
+    * You can set a "password/token" when you create a Redis cluster
+    * Extra level of security for your cache (on top of security groups)
+* Memcached
+    * Supports SASL-based authentication (advanced) 
+
+--- ec2 security group ---
+ec2 instance    <--- (SSL encryption, Redis AUTH) ---> Redis Security group (Redis cluster)
+
+## ElastiCache for Solutions Architects
+* Patterns for ElastiCache
+    * *lazy loading:* all the read data is cached, data can become stale in cache
+    * *write through:* adds or update data in the cache when written to a db (no stale data)
+    * *session store:* store temporary session data in a cache (using TTL features)
+* "there are only two hard things in computer science: cache invalidation and naming things"
+
+lazy loading:
+application requests data from ElastiCache and doesn't find it (cache miss) and so it reads from RDS
+RDS returns data to the application
+Application writes data to the cache
+
 
