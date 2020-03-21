@@ -29,3 +29,20 @@ Web Browser    --- DNS request (http://myapp.mydomain.com) ---> Route 53
     * health checks (although limited)
     * routing policy: simple, failover, geolocation, latency, weighted, multi-value
 * You pay $0.50 / month per hosted zone
+
+## DNS Records TTL (Time to Live)
+* Way to cache the DNS query so as to not overload DNS
+* DNS cache will update if IP changes but only if the TTL expires
+* High TTL ~24 hours
+    * less traffic on DNS
+    * possibly outdated records
+* Low TTL, ~ 60s
+    * more traffic on DNS
+    * Records outdated for less time
+    * Easy to change records
+
+Browser --- (DNS Request: http://myapp.mydomain.com) ---> Route 53
+ (DNS cache for TTL duration)  <--- Send back IP: 32.45.67.85 (A record: URL to IP), TTL: 300 s ---
+
+        --- (DNS Request: http://myapp.mydomain.com) ---> Route 53
+        <-- Send back IP: 195.23.45.22, A Record: URL to IP, 300 s>
