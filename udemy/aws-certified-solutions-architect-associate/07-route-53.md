@@ -46,3 +46,81 @@ Browser --- (DNS Request: http://myapp.mydomain.com) ---> Route 53
 
         --- (DNS Request: http://myapp.mydomain.com) ---> Route 53
         <-- Send back IP: 195.23.45.22, A Record: URL to IP, 300 s>
+
+## CNAME vs. Alias
+* AWS resources (Load Balancer, CloudFront, etc.) expose an AWS URL: `lbl-1234.us-east-2.elb.amazonaws.com` and you want it to be `myapp.mydomain.com`
+* CNAME: 
+    * Points a URL to any other URL - app.mydomain.com -> blah.anything.com
+    * *only for non-ROOT domain (aka something.mydomain.com), can't be mydomain.com*
+* Alias:
+    * Points a URL to an AWS resource - app.mydomain.com -> blahbla.amazonaws.com
+    * *works for root and non-root domains (aka mydomain.com)*
+    * Free of charge
+    * support for native health chec
+
+## Simple Routing Policy
+* Maps a domain to one URL
+* Use when you need to redirect to a single resource
+* You can't attach health checks to a simple routing policy
+* If multiple values are returned, a random one is chosen by the client
+
+## Weighted Routing Policy
+* Control the % of the requests that go to a specific endpoint
+
+            -> 70% ec2 weight: 70
+Route 53    -> 20% ec2 weight: 20
+            -> 10% ec2 weight: 10
+
+* Helpful to test 1% of traffic on new app version for example
+* Helpful to split traffic between two regions
+* Can be associated with health checks
+
+## Latency Routing Policy
+* Redirect to the server that has the least latency close to us
+* Super helpful when latency of users is a priority
+* Latency is evaluated in terms of user to designated AWS Region
+* Germany may be directed to the US (if that's the lowest latency)
+
+## Health Check
+* Have x health checks fail -> unhealthy (default is 3)
+* Have x health checks pass -> healthy (default is 3)
+* Default health check interval: 30s (can set to 10s - but leads to higher cost)
+* About 15 health checkers will check the endpoint health
+* -> 1 request every 2 secs on average
+* Can have HTTP, TCP, and HTTPS health checks (no SSL verification)
+* Possibility of integrating the health check with CloudWatch
+* Health checks can be linked to Route 53 DNS queries!
+
+## Failover Routing Policy
+Web Browser --- (DNS request) ---> Route 53 --- (health check - mandatory) ---> Primary
+                                            --- (failover if health check fails) ---> Secondary (disaster recovery)
+
+## Geolocation Routing Policy
+* Different from latency-based
+* Routing based on user location
+* Here we specify: traffic from UK should go to this specific IP
+* Should create a "default" policy (in case there's no match on location)
+
+## Multi Value Routing Policy
+* Use when routing traffic to multiple resources
+* Want to associate a Route 53 health checks with records
+* Up to 8 healthy records are returned for each Multi Value query
+* MultiValue is not a substitute for having an Elastic Load Balancer
+
+## Route 53 as a Registrar
+* A domain name *registrar* is an organization that manages the reservation of Internet domain names
+* Famous names:
+    * GoDaddy
+    * Google Domains
+    * Etc ...
+* And also... Route 53 (e.g. AWS)
+* Domain Registrar != DNS
+
+## 3rd Party Registrar with AWS Route 53
+* If you buy your domain on 3rd party website, you can still use Route 53
+1. Create a Hosted Zone in Route 53
+2. Update NS records on 3rd party website to use Route 53 name servers
+
+* Domain Registrar != DNS!
+* (but each domain registrar usually comes with some DNS features)
+* You can insert NS servers in 3rd party website
