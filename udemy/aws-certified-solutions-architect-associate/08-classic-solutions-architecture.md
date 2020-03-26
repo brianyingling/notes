@@ -138,7 +138,7 @@ user --- multi availability zone ELB --->
 v                                                                    m5 (AZ3) --------> 
 user ---> (send session_id in web cookies) ---> multi AZ ELB ---> 
 
-* Instance receives the session_id from the request and then uses that to fetch the cart from elastiCache
+* Instance receives the session_id from the request and then uses that to fetch the cart from ElastiCache
 * Cart is returned to the instance which is then returned to the client
 * Storing session data in DynamoDB is an alternative
 * Using ElastiCache is much more secure than sending cart data from client by way of cookies
