@@ -124,15 +124,15 @@ Client side data key
     * Bucket Access Control List - ACL - less common
 
 ## S3 Bucket Policies
-    * JSON-based policies
-        * Resources: buckets and objects
-        * Actions: set of API to allow or deny
-        * Effect: Allow / Deny
-        * Principal: The account / user to apply policy to.
-    * Use s3 bucket for policy to:
-        * grant public access to public
-        * force objects to be encrypted at upload
-        * grant access to another account (cross account)
+* JSON-based policies
+    * Resources: buckets and objects
+    * Actions: set of API to allow or deny
+    * Effect: Allow / Deny
+    * Principal: The account / user to apply policy to.
+* Use s3 bucket for policy to:
+    * grant public access to public
+    * force objects to be encrypted at upload
+    * grant access to another account (cross account)
 
 ## S3 Security - Other
 * Networking
