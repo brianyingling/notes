@@ -179,3 +179,21 @@ users <--- upload/download SSE-KMS ---> S3 bucket <--- API call ---> KMS key
 * Less network transfer, less CPU cost client side
 user --- Get CSV with S3 select (only gettting rows/columns) ---> S3 (performs filter server side)
         <--- Send filtered dataset ---
+
+## Athena Overview
+* Serverless service to perform analytics directly against s3 files
+* Use SQL language to query files
+* Has a JDBC / ODBC driver
+* Charged per query and amount of data scanned
+* Supports CSV, JSON, ORC, Avro, and Parquet (built on Presto)
+* Use cases: Business intelligence / analytics / reporting, analyze & query VPC Flow Logs, ELB Logs, CloudTrail trails, etc.
+* Exam Tip: Analyze data directly on S3 -> use Athena
+
+## S3 Object Lock and Glacier Vault Lock
+* S3 Object Lock
+    * Adopt a WORM (Write Once Read Many) model
+    * Block an object version deletion for a specified amount of time
+* Glacier Vault Lock
+    * Adopt a WORM (Write Once Read Many) model
+    * Lock the policy for future edits (can no longer be changed)
+    * Helpful for compliance and data retention
