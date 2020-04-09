@@ -177,3 +177,15 @@ Client --- (GET index.html) ---> mybucket
 * Eventual consistency for DELETEs and PUTs of existing objects
     * If we read an object after updating, we might get the older version
       (ex: PUT 200 -> PUT 200 -> GET 200 -- might be older version)
+
+## Storage Comparison
+* S3: Object storage
+* Glacier: Object Archival
+* EFS: Network File System for Linux, POSIX filesystems
+* FSx for Windows: File System for Windows
+* FSx for Lustre: High Performance Computing Linux file system
+* EBS Volumes: Network storage for one EC2 instance at a time
+* Instance Storage: Physical storage for your EC2 instance - high IOPS
+* Storage Gateway: File Gateway, Volume Gateway, (cache and stored), Tape Gateway
+* Snowball / Snowmobile: to move large amounts of data into the cloud, physically
+* Database: for specific workloads, usually with indexing and querying.
