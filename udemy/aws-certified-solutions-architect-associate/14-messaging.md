@@ -186,3 +186,78 @@ Buying Service ---> SNS Topic   ---> SQS Queue   ---> Fraud Service
 * SQS allows for retries of work
 * May have many workers on one queue and one worker on the other queue
 
+## Kinesis Overview
+* Kinesis is a managed alternative to Apache Kafka
+* Great for application logs, metrics, IoT, clickstreams
+* Great for "real-time" big data
+* Great for streaming processing frameworks (Spark, NiFi, etc.)
+* Data is automatically replicated to 3 availability zones
+* *Kinesis streams:* low latency streaming ingest at scale
+* *Kinesis Analytics:* perform real-time analytics on streams using SQL
+* *Kinesis Firehose:* load streams into s3, RedShift, ElasticSearch, etc...
+
+## Kinesis
+                                            --- Kinesis ---
+
+Click Streams   -->                                                                     ---> S3 Bucket
+IoT Devices     -->     Kinesis Streams ---> Kinesis Analytics ---> Kinesis Firehose    ---> Redshift
+Metrics & Logs  --> 
+
+## Kinesis Streams Overview
+* Streams are divided into ordered shards / partitions
+
+                Shard 1
+producers --->  Shard 2     ---> consumers
+                Shard 3
+* Data retention is by default 1 day, can go up to 7 days
+* Ability to reprocess / replay data
+* Multiple applications can consume the same stream
+* Real time processing with scale of throughput
+* Once data is inserted in Kinesis, it can't be deleted (immutability)
+
+## Kinesis Streams Shards
+* One stream is made of many shards
+* 1 MB/sec or 1000 messages/sec at write PER SHARD
+* 2 MB/sec PER SHARD
+* Billing is per shard provisioned, can have as many shards as you want
+* Batching available or per message calls
+* The number of shards can evolve over time (reshard / merge)
+* Records are ordered per shard
+
+## Kinesis API - Put records
+* PutRecord API + Partition key that gets hashed
+* The same key always goes to the same partition (helps with ordering for a specific key)
+* Messages get a "sequence number"
+* Choose a partition key that is highly distributed (helps prevent "hot partition", where all data goes to 1 shard)
+    * user_id if many users
+    * *NOT* country_id if 90% of users are in 1 country
+    * choose something that will spread your data evenly
+* Use Batching with PutRecords to reduce costs and increase throughput
+* ProvisionedThroughputExceeded if we go over the limits
+* Can use CLI, AWS SDK, or producer libraries from various frameworks
+
+Message key (hashed to determine shard id)                          Shard 1
+Data                                        --- (produced) --->     Shard 2
+                                                                    Shard 3
+
+## Kinesis API - Exceptions
+* ProvisionedThroughputExceeded Exceptions
+    * Happens when sending more data (exceeding MB/sec or TPS for any shard)
+    * Make sure you don't have a hot shard (such that your partition key is bad and too much data goes to that partition)
+* Solution
+    * Retries with backoff
+    * Increase shards (scaling)
+    * Ensure your partition key is a good one
+
+## Kinesis API - Consumers
+* Can use a normal consumer (CLI, SDK, etc.)
+* Can use the Kinesis Client Library (in Java, Node, Python, Ruby, .NET)
+    * KCL uses DynamoDB to checkpoint offsets
+    I KCL uses DynamoDB to track other workers and share the work amongst shards
+
+## Kinesis Security
+* Control access / authorization using IAM policies
+* Encryption in flight using HTTPS endpoints
+* Encryption at rest using KMS
+* Possibility to encrypt / decrypt data client side (harder)
+* VPC endpoints available for Kinesis to access within VPC
