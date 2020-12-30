@@ -10,8 +10,8 @@
     * asynchronous / event-based communication: application to queue to application
         * buying service ---> queue ---> shipping service
 * Synchronous between applications can be problematic if there are sudden spikes of traffic
-* What if you need to suddenly encode 1000 videos but usually it's 10
-* In that case it is better to *decouple* your applications
+* What if you need to suddenly encode 1000 videos but usually it's 10?
+* In that case it is better to *decouple* your applications so that it can scale better
     * using SQS: queue model
     * using SNS: pub/sub model
     * using Kinesis: real-time streaming model
@@ -23,20 +23,112 @@ Producers (can have many) --- (send messages) ---> SQS --- (poll messages) ---> 
 ## SQS - Standard Queue
 * Oldest offering (over 10 years old)
 * Fully managed
-* Scales from 1 message/sec to 10,000s messages/sec
-* Default retention of messages: 4 days, max 14 days
-* No limit to how many messages can be in the queue
-* Low latency (< 10ms on publish and receive)
-* Horizontal scaling in terms of number of consumers
+* Attributes:
+    * Unlimited throughput, unlimited number of messages in queue
+    * Default retention of messages: 4 days, maximum of 14 days (has to be deleted within that timeframe)
+    * Low latency (<10 ms on publish and receive)
+    * Limitation of 256K per message sent
 * Can have duplicate messages (at least once delivery, occassionally)
 * Can have out of order messages (best effort ordering)
-* Limitation of 256K per message sent
 
+* Scales from 1 message/sec to 10,000s messages/sec
+* Horizontal scaling in terms of number of consumers
+
+## SQS - Producing Messages
+* Produced to SQS using the SDK (SendMessage API)
+* The message is persisted in SQS until a consumer deletes it
+* Message retention: default 4 days up to 14 days
+* Example: send an order to be processed:
+    * Order id
+    * Customer Id
+    * Any attributes you want
+* SQS standard: unlimited throughput
+
+## SQS - Consuming Messages
+* Consumers (running on EC2 instances, servers, or AWS Lambda)
+* Poll SQS for messages (receive up to 10 messages at a time)
+* Process the messages (example: insert message into RDS database)
+* Delete the messages using the DeleteMessage API
+
+## SQS Multiple EC2 Instances Consumers
+* Consumers receive and process messages in parallel
+* At least once delivery
+* Best-effort message ordering
+* Consumers delete messages after processing them
+* We can scale consumers horizontally to improve throughput of messaging
+
+## SQS with Auto Scaling Group (ASG)
+* Can setup an Auto Scaling Group that scales out based on the queue length (this is set up in CloudWatch)
+
+SQS Queue ---- Poll for messages ---> EC2 instances with Auto Scaling Group
+|
+|
+v
+CloudWatch Metric - Queue Length ---> CloudWatch Alarm, scale instances now
+ApproxNumberOfMessages
+
+## SQS to decouple between application tiers
+--- request ---> Front End Web App (auto scaling) ---> SQS Queue ---> Back end processing App (video processing) Auto Scaling ---> insert S3 bucket
+* Let the SQS queue receive the request for the back end app to consume instead of having the front end app tier handle the processing
+
+## Amazon SQS - Security
+* Encryption
+    * In-flight encryption using HTTPS API
+    * At-rest encryption using KMS keys
+    * Client side encryption if the client wants to perform encryption/decryption itself
+* Access Controls: IAM policies to regulate access to the SQS API
+* SQS Access Policies (similar to S3 bucket policies)
+    * Useful for cross-account access to SQS queues
+    * Useful for allowing other services (SNS, S3...) to write to an SQS queue
+
+## SQS - Message Visibility Timeout
+* After a message is polled by a consumer, it becomes visible to other consumers'
+* By default the "message visibility timeout" is 30 secs.
+* That means the message has 30 secs to be processed.
+* Within the visibility timeout (30 secs) other consumers of the queue will not receive the message
+* After the message visibility timeout is over, the message is "visible" in SQS
+* If a message is NOT processed within the visibility timeout, it will be processed TWICE
+* A consumer could call the ChangeMessageVisibility API to get more time
+* If visibility timeout is high (say, hours) and consumer crashes, re-processing will take time
+* If visibility timeout is too low (secs) we may get duplicates
+
+ReceiveMessage  ReceiveMessage                              ReceiveMessage          ReceiveMessage
+Req             Req                                         Req                     Req
+|               | (don't see bc visibility timeout window)  | (don't see)           | (seen, because timeout window exp.)
+------------- ( time ) ----------------------------------------------------------------->
+
+## SQS - Dead Letter Queue
+* If a consumer fails to process a message within the Visiblity Timeout...the message goes back to the queue
+* We can set a threshold of how many times a message can go back into the queue
+* After the *MaximumReceives* threshold is exceeded, the message goes into a dead letter queue (DLQ)
+* Useful for debugging!
+* Make sure to process the messages in the DLQ before they expire:
+*   Good to set a retention of 14 days in DLQ
 ## SQS - Delay Queue
 * Delay a message (consumers don't see it immediately) up to 15 mins
 * Default is 0 sec (message is available right away)
 * Can set a default at a queue level
 * Can override the default setting using the DelaySeconds parameter
+
+## SQS - FIFO Queue
+* FIFO = First In First Out (ordering of messages in queue)
+* Consumer will receive messages in the exact same order producer sends them
+* Limited throughput: 300 msg/sec without batching, 3000 msg/sec with batching
+* Exactly once send capability (by removing duplicates)
+* Messages are processed in order by the consumer
+
+## SQS with Auto Scaling Group (ASG)
+* Goal: scale the number of EC2 instances based on the number of messages in the SQS queue
+
+(SQS Queue) - | (poll for messages) -> EC2 instances+ | - Auto Scaling Group
+
+CloudWatch Custom Metric - Queue Length / Number of Instances
+CloudWatch Alarm triggered, scales Auto Scaling Group
+
+More load, more EC2 instances, less load, less EC2 instances
+
+## SQS to decouple between application tiers
+requests -> (EC2 instances+ ASG) -> SQS Queue -> (EC2 instances+  - ASG)
 
 ## SQS - Producing Messages
 * Define Body (up to 256k "string", attributes - name, value, type)
@@ -128,7 +220,7 @@ Queue Length / # of instances                                               |
 request ---> ec2 instances --- (PUT) ---> SQS Queue ---> ec2 instances
 
 ## SNS
-* What if you want to send one message to many
+* What if you want to send one message to many receivers?
 
 Direct Integration:
 
@@ -137,7 +229,7 @@ Buying Service  --->    Email notification
                 --->    Shipping Service
                 --->    SQS queue
 
-Pub/Sub:
+Pub/Sub:                                Subscribers:
 Buying Service ---> SNS Topic   --->    Email notification
                                 --->    Fraud service
                                 --->    Shipping Service
@@ -153,11 +245,11 @@ Buying Service ---> SNS Topic   --->    Email notification
     * HTTP/HTTPS (with delivery retries - how many times?)
     * Lambda
     * Emails
-    * SNS messages
+    * SMS messages
     * Mobile notifications
 
 ## SNS integrates with a lot of Amazon Products
-* Some services can send data directly to SNS for notifications
+* Many AWS services can send directly to SNS for notifications
 * CloudWatch (for alarms)
 * Auto Scaling Groups notifications
 * S3 (on bucket events)
@@ -175,6 +267,17 @@ Buying Service ---> SNS Topic   --->    Email notification
     * Publish to the platform endpoitn
     * Works with Google GCM, Apple APNS, Amazon ADM
 
+## Amazon SNS - Security
+* Encryption:
+    * In-flight encryption using HTTPS API
+    * At-rest encryption using KMS keys
+    * Client-side encryption if the client wants to perform encryption/decryption itself
+* Access Controls: IAM policies to regulate access to the SNS API
+* SNS Access Policies (similar to S3 bucket policies)
+    * Useful for cross-account access to SNS topics
+    * Useful for allowing other services (S3...) to write to an SNS topic
+
+
 ## SNS + SQS: Fan Out
 * Push once in SNS, receive in many SQS queues
 Buying Service ---> SNS Topic   ---> SQS Queue   ---> Fraud Service
@@ -184,8 +287,17 @@ Buying Service ---> SNS Topic   ---> SQS Queue   ---> Fraud Service
 * Able to add receivers of data later can add/remove queues later
 * SQS allows for delayed processing
 * SQS allows for retries of work
+* Ability to add more SQS subscribers over time\
+* Make sure your SQS queue access policy allows for SNS to write
+* *SNS cannot send messages to SQS FIFO queues (AWS limitation)*
 * May have many workers on one queue and one worker on the other queue
 
+## Application: S3 Events to multiple queues
+* For the same combination of: event type (eg object create) and prefix (e.g. images/) you can only have *one S3 event rule*
+* If you want to send the same S3 event to many SQS queues, use fan-out
+
+S3 Object created ... - events -> Amazon S3 -> SNS Topic - Fan out ---> SQS Queue
+                                                                   ---> SQS Queue
 ## Kinesis Overview
 * Kinesis is a managed alternative to Apache Kafka
 * Great for application logs, metrics, IoT, clickstreams
