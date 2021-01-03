@@ -373,3 +373,107 @@ Data                                        --- (produced) --->     Shard 2
 * Encryption at rest using KMS
 * Possibility to encrypt / decrypt data client side (harder)
 * VPC endpoints available for Kinesis to access within VPC
+
+## AWS Kinesis Data Firehose
+* Fully Managed Service, no administration, automatic scaling, serverless
+* What is Data Firehose used for?
+    * Load data into Redshift / Amazon S3 / ElasticSearch / Splunk
+* Near Real Time
+    * 60 seconds latency min. for non full batches
+    * Min. 32MB of data at a time
+* Supports many data formats, conversions, transformations, compression
+* Pay fo rthe amount of data going through Firehose
+
+Kinesis Data Firehose Diagram
+
+SDK - Kinesis Producer Library  |           Lambda function (transformations)       | Amazon S3
+Kinesis Agent                   | ->        Kinesis Data Firehose             ->    | Redshift
+Kinesis Data Streams            |                                                   | ElasticSearch
+CloudWatch Logs & Events        |                                                   | Splunk
+
+Kinesis Data Streams vs Firehose
+* Streams
+    * Used when you're going to write custom code (producer / consumer)
+    * Real time ~ 200ms
+    * Must manage scaling (shard splitting / merging)
+    * Data storage for 1 to 7 days, replay capability, multi consumers
+* Firehose
+    * Fully managed, send to S3, Splunk, Redshift, ElasticSearch
+    * Serverless data transformations with Lambda
+    * Near real time ( lowest buffer time is 1 min)
+    * Automated scaling
+    * No data storage
+
+Kinesis Data Analytics
+* Perform real-time analytics on Kinesis Streams using SQL
+* Kinesis Data Analytics:
+    * Auto Scaling
+    * Managed: no servers to provision
+    * Continuous: real time
+* Pay for actual consumption rate
+* Can create streams out of the real-time queries
+
+## Data Ordering for Kinesis vs SQS FIFO
+Ordering data into Kinesis
+* Imagine we have 100 trucks on the road sending their GPS coords regularly into AWS
+* We want to consume the data so that we can track their movement accurately
+* How can we send that data into Kinesis?
+* Answer: send using a "Partition Key" value of the "truck_id"
+* The same key will also go to the same shard
+* 5 trucks each with unique ids to 3 shards, each truck will always go to the same shard
+
+Ordering data into SQS
+* For SQS standard, there is no ordering
+* For SQS FIFO, if you don't use a group id, messages are consumed in the order they are sent, *with only one consumer*
+* You want to scale the number of consumers, but you want messages to be "grouped" when they are related to each other
+* Then you use a Group ID (similar to a partition key in Kinesis)
+
+Kinesis vs SQS ordering
+* Let's assume 100 trucks, 5 kinesis shards, 1 SQS FIFO
+* Kinesis Data Streams:
+    * On average, about 20 trucks per shard (due to sharding)
+    * Trucks will have their data ordered within each shard
+    * Maximum amount of consumers in parallel we can have is 5
+    * Can receive up to 5MB/sec of data
+* SQS FIFO:
+    * Can only have one SQS FIFO queue
+    * You will have 100 Group IDs - 1 for each truck id
+    * You can have up to 100 consumers because there are 100 group ids
+    * You can have up to 300 messages / sec (or 3000 if using batching)
+
+SQS vs SNS vs Kinesis
+SQS:
+* Consumer pull data
+* Data is deleted after being consumed
+* Can have as many workers (consumers ) as we want
+* No need to provision throughput
+* No ordering guarantee (except FIFO queues)
+* Individual message delay capability
+
+SNS:
+* Push data to many subscribers
+* Up to 10 mil subscribers
+* Data is not persisted (lost if not delivered)
+* Pub/sub
+* Up to 100K topics
+* No need to provision throughput
+* Integrates with SQS for fan-out architecture pattern
+
+Kinesis:
+* Consumers "pull data"
+* As many consumers as we want
+* 1 consumer / shard
+* Possibly to replay data
+* Meant for real-time big data, analytics and ETL
+* Ordering at the shard level
+* Data expires after X days
+* Must provision throughput
+
+Amazon MQ
+* SQS, SNS are "cloud native" services and they're using proprietary protocols from AWS
+* Traditional applications running on-premise may use open protocols such as MQTT, AMQP, STOMP, Openwire, WSS
+* When migrating to the cloud, instead of reengineering the application to use SQS and SNS, we can use Amazon MQ
+* Amazon MQ = managed Apache ActiveMQ
+* Amazon MQ doesn't scale as much as SQS / SNS
+* Amazon MQ runs on a dedicated machine, can run in HA with failover
+* Amazon MQ has both queue features (~SQS) and topic features (~SNS)
